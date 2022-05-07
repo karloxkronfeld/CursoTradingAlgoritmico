@@ -19,6 +19,7 @@ request = {
         "sl": mt5.symbol_info_tick().ask - 1.5,
         "tp": mt5.symbol_info_tick().bid - 3.5,
         "volume":0.01,
+        "price": mt5.symbol_info_tick("EURUSD").ask,
         "comment":'NOMBRE______',
         "type_filling":mt5.ORDER_FILLING_IOC
 }
