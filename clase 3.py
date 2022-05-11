@@ -1,13 +1,14 @@
 import MetaTrader5 as mt5
 import pandas as pd
 
-name = 3998980
-key = "Inup.2021"
-serv = "Deriv-Demo"
+# name = 3998980
+# key = "Inup.2021"
+# serv = "Deriv-Demo"
 
-mt5.initialize(login=name,server=serv,password=key)
-
+# mt5.initialize(login=name,server=serv,password=key)
+mt5.initialize()
 open_pos = mt5.positions_get()
+
 df_open_positions = pd.DataFrame(list(open_pos), columns= open_pos[0]._asdict().keys())
 
 #Cerrar para Operaciones de compra
@@ -33,7 +34,7 @@ for operacion in lista_ops:
         'type_filling': mt5.ORDER_FILLING_FOK
     }
 
-    mt5.order_send(close_request)
+    # mt5.order_send(close_request)
 
 
 def break_even_function(df_open_positions: pd.DataFrame,perc_rec):

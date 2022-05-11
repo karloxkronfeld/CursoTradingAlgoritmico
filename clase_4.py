@@ -8,7 +8,7 @@ name = 	67042877
 key = "Genttly.2022"
 serv = "RoboForex-ECN"
 path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-symbolos="XAUUSD"
+symbol="EURUSD"
 
 class Algo_Trading_Udea():
     def obtener_datos(self, symbol, name, serv, key, path):
@@ -59,17 +59,21 @@ class Algo_Trading_Udea():
                 "type": mt5.ORDER_TYPE_SELL,
                 "volume": float(lot),
                 "price": mt5.symbol_info_tick(symbol).ask,
-                "tp": mt5.symbol_info_tick(symbol).ask + 0.0002,
-                "comment": 'Cod prueba2',
+                "tp": mt5.symbol_info_tick(symbol).ask + 0.000002,
+                "comment": "codigo_prueba",
                 "type_filling": mt5.ORDER_FILLING_FOK
             }
 
-            mt5.order_send(request)
+            result = mt5.order_send(request)
+
+            print("Orden enviada en {}, vol={} \nla hora es: {}".format(symbol, lot, datetime.now()));
+            if result.retcode != mt5.TRADE_RETCODE_DONE:
+                print("ERROR: {} ".format(result.comment))
 
     def robot_handler(self):
         while True:
-            tabla_tasas_m1 = self.obtener_datos('XAUUSD', name, serv, key, path)
-            self.abrir_operaciones('XAUUSD', tabla_tasas_m1, 0.01)
+            tabla_tasas_m1 = self.obtener_datos(symbol, name, serv, key, path)
+            self.abrir_operaciones(symbol, tabla_tasas_m1, 0.01)
 
             time.sleep(60 - datetime.now().microsecond / 1000000)
 
