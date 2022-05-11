@@ -1,4 +1,14 @@
+import MetaTrader5 as mt5
+import pandas as pd
+import time
+from datetime import datetime
 
+
+name = 	67042877
+key = "Genttly.2022"
+serv = "RoboForex-ECN"
+path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
+symbolos="XAUUSD"
 
 class Algo_Trading_Udea():
     def obtener_datos(self, symbol, name, serv, key, path):
@@ -41,7 +51,7 @@ class Algo_Trading_Udea():
 
         if ultima_diferencia > 0:
             # lot = calcular_lotaje(1.0,tabla_tasas_m1)
-            lot = self.calcular_lotaje(1.0, tabla_tasas_m1)
+            lot = self.calcular_lotaje(0.01, tabla_tasas_m1)
 
             request = {
                 "action": mt5.TRADE_ACTION_DEAL,
@@ -58,7 +68,11 @@ class Algo_Trading_Udea():
 
     def robot_handler(self):
         while True:
-            tabla_tasas_m1 = self.obtener_datos('EURUSD', name, serv, key, path)
-            self.abrir_operaciones('EURUSD', tabla_tasas_m1, 1.0)
+            tabla_tasas_m1 = self.obtener_datos('XAUUSD', name, serv, key, path)
+            self.abrir_operaciones('XAUUSD', tabla_tasas_m1, 0.01)
 
             time.sleep(60 - datetime.now().microsecond / 1000000)
+
+
+
+Algo_Trading_Udea().robot_handler()
