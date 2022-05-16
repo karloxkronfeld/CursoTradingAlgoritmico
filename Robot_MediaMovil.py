@@ -1,16 +1,12 @@
 import MetaTrader5 as mt5
 import pandas as pd
-import time
-
-import numpy as np
-import statistics
 from pylab import *
 
 name = 	67042877
 key = "Genttly.2022"
 serv = "RoboForex-ECN"
 path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-symbol="XAUUSD"
+symbol="BTCUSD"
 
 mt5.initialize(login=name, server=serv, password=key, path=path)
 
@@ -32,7 +28,7 @@ class Robot_medias_moviles():
         datos_signal=datos
         print("{}, Precio = {}, Media = {}, NO HAY ENTRADA(Una_signal) ".format(datos.index[-1],datos.close[-1],round(datos.media20[-1],2)))
 
-        return datos_signal
+
 
     def Otra_signal(self):
         datos= self.Obtener_datos(symbol=symbol,temporalidad=30,Nro_datos=2000)
@@ -57,18 +53,20 @@ class Robot_medias_moviles():
         # ax2.hlines(limite_superior, datos.index[0], datos.index[-1],color="green")
         # ax2.legend(["Dif. Media Precio","Lim Inf","Lim Sup"])
         # xticks(rotation=50)
+        # show()
 
-        # GRAFICO 2
+
+        # # GRAFICO 2
         # datos[["close", "media200"]].plot(figsize=(20, 7))
         # twinx()
         # datos.diferencia.plot(color="red")
         # show()
 
         # GRAFICO 3
-        # datos[["close", "media200"]].plot()
-        # plot(datos.loc[datos.posicion_buy == 1].index, datos.close[datos.posicion_buy == 1], '^', markersize=7, color="g", label="buy")
-        # plot(datos.loc[datos.posicion_sell == 1].index, datos.close[datos.posicion_sell == 1], 'v', markersize=7, color="r", label="sell")
-        # show()
+        datos[["close", "media200"]].plot()
+        plot(datos.loc[datos.posicion_buy == 1].index, datos.close[datos.posicion_buy == 1], '^', markersize=7, color="g", label="buy")
+        plot(datos.loc[datos.posicion_sell == 1].index, datos.close[datos.posicion_sell == 1], 'v', markersize=7, color="r", label="sell")
+        show()
         return datos_signal
 
     def Abrir_operaciones(self, datos, lote=0.01):
@@ -110,16 +108,20 @@ class Robot_medias_moviles():
 
     def robot_handler(self):
         while True:
+            #Estrategia Una_signal()
             datos_una = self.Una_signal()
             self.Abrir_operaciones(datos=datos_una)
+
+            #Estrategia Otra_signal()
             # datos_otra= self.Otra_signal()
             # self.Abrir_operaciones(datos=datos_otra)
 
             time.sleep(5 - datetime.datetime.now().microsecond / 1000000)
 
-
-
-Robot_medias_moviles().robot_handler()
+# Robot_medias_moviles().Obtener_datos(symbol=symbol)
+# Robot_medias_moviles().Una_signal()
+Robot_medias_moviles().Otra_signal()
+# Robot_medias_moviles().robot_handler()
 
 
 
