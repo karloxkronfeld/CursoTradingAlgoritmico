@@ -4,7 +4,6 @@ import pandas as pd
 # name = 3998980
 # key = "Inup.2021"
 # serv = "Deriv-Demo"
-
 # mt5.initialize(login=name,server=serv,password=key)
 mt5.initialize()
 open_pos = mt5.positions_get()

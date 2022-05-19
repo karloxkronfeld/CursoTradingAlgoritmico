@@ -1,5 +1,4 @@
 ############## Soportes y Resistencias #################
-
 # Profundidad del Mercado #
 symbol = 'EURUSD'
 mt5.initialize(login = name, server = serv, password = key, path = path)

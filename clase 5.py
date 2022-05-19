@@ -15,7 +15,6 @@ tabla_tasas_m1['diff_ma15'] = tabla_tasas_m1['ma15'] - tabla_tasas_m1['ma15'].sh
 tabla_tasas_m1['senial_c_l'] = np.where( (tabla_tasas_m1['close'] >= tabla_tasas_m1['ma15']) & (tabla_tasas_m1['diff_ma15']>0),'Buy','')
 tabla_tasas_m1['senial_s'] = np.where( (tabla_tasas_m1['close'] <= tabla_tasas_m1['ma15']) & (tabla_tasas_m1['diff_ma15']>0),'Buy','')
 
-
 # Mean Reversion
 symbol = '.USTECHCash'
 tasas_m1 = mt5.copy_rates_from_pos(symbol,mt5.TIMEFRAME_M15,0,99000)

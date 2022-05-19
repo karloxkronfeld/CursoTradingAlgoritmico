@@ -1,13 +1,8 @@
 import MetaTrader5 as mt5
-
-
-
 ##EJERCICIO BUY
 name = 	67042877
 key = "Genttly.2022"
 serv = "RoboForex-ECN"
-
-
 
 mt5.initialize(login=name,server=serv,password=key)
 

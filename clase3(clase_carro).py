@@ -5,7 +5,6 @@ import numpy as np
 def presentar_carro(modelo, color, peso):
     print('Estre auto es un', modelo, 'de color', color, 'y pesa', peso)
 
-
 modelo = 'Chevy del 76'
 color = 'Rojo'
 peso = 60

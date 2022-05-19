@@ -8,7 +8,6 @@ tabla_tasas_m1 = pd.DataFrame(tasas_m1)
 
 tabla_tasas_m1['RSI'] = RSI(tabla_tasas_m1['close'])
 tabla_tasas_m1['atipico_compra'] = np.where(tabla_tasas_m1['RSI']<(tabla_tasas_m1['RSI'].mean()-3*tabla_tasas_m1['RSI'].std()),1,0)
-
 tabla_tasas_m1['RSI'].hist()
 
 

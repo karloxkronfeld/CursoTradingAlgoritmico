@@ -39,7 +39,6 @@ model_loaded = pickle.load(open(filename,'rb'))
 
 # Patrones de velas
 
-
 #Dojis
 
 symbol = 'EURUSD'

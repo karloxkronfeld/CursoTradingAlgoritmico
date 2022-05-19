@@ -2,7 +2,6 @@ import MetaTrader5 as mt5
 import numpy as np
 import pandas as pd
 
-
 name = 	67042877
 key = "Genttly.2022"
 serv = "RoboForex-ECN"
