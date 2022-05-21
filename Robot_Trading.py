@@ -7,7 +7,7 @@ name = 	67042877
 key = "Genttly.2022"
 serv = "RoboForex-ECN"
 path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-symbol="XAUUSD"
+symbol="BTCUSD"
 
 mt5.initialize(login=name, server=serv, password=key, path=path)
 
@@ -26,7 +26,7 @@ class Robot_medias_moviles():
         datos["posicion_buy"] = datos.signal_buy.diff()
         datos["signal_sell"] = np.where((datos.close <= datos.media20) & (datos.diff_media < 0), 1, 0)
         datos["posicion_sell"] = datos.signal_sell.diff()
-        datos_signal=datos
+        return datos
         print("{}, Precio = {}, Media = {}, NO HAY ENTRADA(Una_signal) ".format(datos.index[-1],datos.close[-1],round(datos.media20[-1],2)))
 
     def Otra_signal(self):
@@ -40,7 +40,7 @@ class Robot_medias_moviles():
         datos["signal_sell"] = where(datos.diferencia < limite_inferior, 1, 0)
         datos["posicion_sell"] = datos.signal_sell.diff()
 
-        datos_signal=datos
+
         print("{}, Precio = {}, NO HAY ENTRADA(Otra_signal) ".format(datos.index[-1], datos.close[-1]))
 
         # #GRAFICO 1
@@ -66,7 +66,7 @@ class Robot_medias_moviles():
         plot(datos.loc[datos.posicion_buy == 1].index, datos.close[datos.posicion_buy == 1], '^', markersize=7, color="g", label="buy")
         plot(datos.loc[datos.posicion_sell == 1].index, datos.close[datos.posicion_sell == 1], 'v', markersize=7, color="r", label="sell")
         show()
-        return datos_signal
+        return datos
 
     def RSI_signal(self):
         datos=self.Obtener_datos(symbol=symbol,temporalidad=16385,Nro_datos=1000)
@@ -110,18 +110,27 @@ class Robot_medias_moviles():
         rs_gain = datos['RelativeStrengthAvgGainOver20Days']
         rs_loss = datos['RelativeStrengthAvgLossOver20Days']
         rsi = datos['RelativeStrengthIndicatorOver20Days']
-        limite_inferior = rsi.sort_values()[:100].mean()
-        limite_superior = rsi.sort_values()[-100:].mean()
+        limite_inferior = rsi.sort_values()[:1000].mean()
+        limite_superior = rsi.sort_values()[-1000:].mean()
 
-        fig=figure()
-        ax1= fig.add_subplot(211, ylabel="{} precios".format(symbol))
-        close_price.plot(ax=ax1)
-        ax2= fig.add_subplot(212)
-        rsi.plot(ax=ax2)
-        #
-        ax2.hlines(limite_inferior, datos.index[0], datos.index[-1],color="g")
-        ax2.hlines(limite_superior, datos.index[0], datos.index[-1],color="red")
+        datos["signal_buy"] = where(rsi<limite_inferior,1,0)
+        datos["posicion_buy"] = datos.signal_buy.diff()
 
+        datos["signal_sell"] = where(rsi < limite_inferior,1,0)
+
+        datos["posicion_sell"] = datos.signal_sell.diff()
+        print("{}, Precio = {}, NO HAY ENTRADA (RSI signal) ".format(datos.index[-1], datos.close[-1],))
+
+        return datos
+        # fig=figure()
+        # ax1= fig.add_subplot(211, ylabel="{} precios".format(symbol))
+        # close_price.plot(ax=ax1)
+        # ax2= fig.add_subplot(212)
+        # rsi.plot(ax=ax2)
+        # #
+        # ax2.hlines(limite_inferior, datos.index[0], datos.index[-1],color="g")
+        # ax2.hlines(limite_superior, datos.index[0], datos.index[-1],color="red")
+        # show()
         # fig = figure()
         # ax1 = fig.add_subplot(311, ylabel="{} precios".format(symbol))
         # close_price.plot(ax=ax1, color='black', lw=2., legend=True)
@@ -130,62 +139,67 @@ class Robot_medias_moviles():
         # rs_loss.plot(ax=ax2, color='r', lw=2., legend=True)
         # ax3 = fig.add_subplot(313, ylabel='RSI')
         # rsi.plot(ax=ax3, color='b', lw=2., legend=True)
-        show()
+        # show()
 
-        def Abrir_operaciones(self, datos, lote=0.01):
+    def Abrir_operaciones(self, datos, lote=0.01):
 
-            ultimo_dato=datos.iloc[-1]
+        ultimo_dato=datos.iloc[-1]
 
-            if ultimo_dato.posicion_buy == 1:
-                request = {
-                    "action": mt5.TRADE_ACTION_DEAL,
-                    "symbol": symbol,
-                    "type": mt5.ORDER_TYPE_BUY,
-                    "volume": lote,
-                    "price": mt5.symbol_info_tick(symbol).ask,
-                    "comment": "Cañola_Medias",
-                    "type_filling": mt5.ORDER_FILLING_FOK
-                }
+        if ultimo_dato.posicion_buy == 1:
+            request = {
+                "action": mt5.TRADE_ACTION_DEAL,
+                "symbol": symbol,
+                "type": mt5.ORDER_TYPE_BUY,
+                "volume": lote,
+                "price": mt5.symbol_info_tick(symbol).ask,
+                "comment": "Cañola_Medias",
+                "type_filling": mt5.ORDER_FILLING_FOK
+            }
 
-                result = mt5.order_send(request)
+            result = mt5.order_send(request)
 
-                print("Orden Compra enviada en {} al precio {} ".format(symbol,datos.close[-1]));
-                if result.retcode != mt5.TRADE_RETCODE_DONE:
-                    print("ERROR: {} ".format(result.comment))
+            print("Orden Compra enviada en {} al precio {} ".format(symbol,datos.close[-1]));
+            if result.retcode != mt5.TRADE_RETCODE_DONE:
+                print("ERROR: {} ".format(result.comment))
 
-            elif ultimo_dato.posicion_sell ==1:
-                request = {
-                    "action": mt5.TRADE_ACTION_DEAL,
-                    "symbol": symbol,
-                    "type": mt5.ORDER_TYPE_SELL,
-                    "volume": lote,
-                    "price": mt5.symbol_info_tick(symbol).bid,
-                    "comment": "Cañola_Medias",
-                    "type_filling": mt5.ORDER_FILLING_FOK
-                }
-                result = mt5.order_send(request)
+        elif ultimo_dato.posicion_sell ==1:
+            request = {
+                "action": mt5.TRADE_ACTION_DEAL,
+                "symbol": symbol,
+                "type": mt5.ORDER_TYPE_SELL,
+                "volume": lote,
+                "price": mt5.symbol_info_tick(symbol).bid,
+                "comment": "Cañola_Medias",
+                "type_filling": mt5.ORDER_FILLING_FOK
+            }
+            result = mt5.order_send(request)
 
-                print("Orden Venta enviada en {}".format(symbol));
-                if result.retcode != mt5.TRADE_RETCODE_DONE:
-                    print("ERROR: {} ".format(result.comment))
+            print("Orden Venta enviada en {}".format(symbol));
+            if result.retcode != mt5.TRADE_RETCODE_DONE:
+                print("ERROR: {} ".format(result.comment))
 
     def robot_handler(self):
         while True:
             #Estrategia Una_signal()
-            datos_una = self.Una_signal()
-            self.Abrir_operaciones(datos=datos_una)
+            # datos_una = self.Una_signal()
+            # self.Abrir_operaciones(datos=datos_una)
 
             #Estrategia Otra_signal()
             # datos_otra= self.Otra_signal()
             # self.Abrir_operaciones(datos=datos_otra)
+
+            #Estrategia RSI-signal
+            datos_rsi= self.RSI_signal()
+            self.Abrir_operaciones(datos=datos_rsi)
 
             time.sleep(5 - datetime.datetime.now().microsecond / 1000000)
 
 # Robot_medias_moviles().Obtener_datos(symbol=symbol)
 # Robot_medias_moviles().Una_signal()
 # Robot_medias_moviles().Otra_signal()
-# Robot_medias_moviles().robot_handler()
-Robot_medias_moviles().RSI_signal()
+# Robot_medias_moviles().RSI_signal()
+Robot_medias_moviles().robot_handler()
+
 
 
 
