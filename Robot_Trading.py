@@ -3,13 +3,7 @@ import pandas as pd
 import statistics as stats
 from pylab import *
 
-name = 	67042877
-key = "Genttly.2022"
-serv = "RoboForex-ECN"
-path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-symbol="BTCUSD"
 
-mt5.initialize(login=name, server=serv, password=key, path=path)
 
 class Robot_medias_moviles():
 
