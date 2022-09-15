@@ -1,8 +1,13 @@
 import MetaTrader5 as mt5
 import pandas as pd
-import numpy as np
+import statistics as stats
+
+from pylab import *
 
 
+
+pd.set_option('mode.chained_assignment',None)
+pd.set_option('display.max_columns', 500,'display.width', 1000)
 
 
 name = 	67042877
@@ -10,34 +15,100 @@ key = "Genttly.2022"
 serv = "RoboForex-ECN"
 path = r"C:\Program Files\MetaTrader 5\terminal64.exe"
 
+temporalidad=16385
+mt5.initialize(login=name, server=serv, password=key, path=path)
+
+def simbolo_aleatorio():
+    simbolos=[]
+    for x in mt5.symbols_get():
+        simbolos.append("{} {}".format(x.name,x.description))
+    simbolo=choice(simbolos)  ###SYMBOLO ALEATORIO
+    print(f"SELECCION \n{simbolo} ")
+    simbolo=simbolo.split(sep=' ', maxsplit=1)[0]
+    return simbolo
+
+simbolo=simbolo_aleatorio()
+
+# simbolo="EURUSD"
+
+def RSI(datos):
+
+    close = datos.close
 
 
+    time_period = 400
+    gain_history = []
+    loss_history = []
+    avg_gain_values = []
+    avg_loss_values = []
+    rsi_values = []
+    last_price = 0
 
-def creacion_de_señales(name, serv, key, path, symbol, sigma, timeframe=mt5.TIMEFRAME_H1, periodo=14):
-    '''
-    Función para crear la lógica de sus estrategias.
-    Se recomiendo utilizar mucho el exec().
-    '''
-    mt5.initialize(login=name, server=serv, password=key, path=path)
-    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, 99000)
-    rates_frame = pd.DataFrame(rates)
-    rates_frame['time'] = pd.to_datetime(rates_frame['time'], unit='s')
-    rates_frame['RSI'] = RSI(np.array(rates_frame['close']), timeperiod=periodo)
-    sigma_4_rsi = sigma * rates_frame['RSI'].std()
-    banda_sup = rates_frame['RSI'].mean() + sigma_4_rsi
-    banda_inf = rates_frame['RSI'].mean() - sigma_4_rsi
-    rates_frame['signal'] = np.where(rates_frame['RSI'] > banda_sup, 'sell',
-                                     np.where(rates_frame['RSI'] < banda_inf, 'buy', ''))
+    for close_price in close:
 
-    return rates_frame
+        if last_price == 0:
+            last_price = close_price
+        gain_history.append(max(0, close_price - last_price))
+        loss_history.append(max(0, last_price - close_price))
+        last_price = close_price
+
+        if len(gain_history) > time_period:
+            del (gain_history[0])
+            del (loss_history[0])
+        #
+        avg_gain = stats.mean(gain_history)
+        avg_loss = stats.mean(loss_history)
+
+        avg_gain_values.append(avg_gain)
+        avg_loss_values.append(avg_loss)
+        rs = 0
+        if avg_loss > 0:
+            rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        rsi_values.append(rsi)
+
+    datos = datos.assign(ClosePrice=pd.Series(close, index=datos.index))
+    datos = datos.assign(RelStrAvgGain=pd.Series(avg_gain_values, index=datos.index))
+    datos = datos.assign(RelStrAvgLoss=pd.Series(avg_loss_values, index=datos.index))
+    datos = datos.assign(RSI=pd.Series(rsi_values, index=datos.index))
+    datos = datos.iloc[2:]
+    close_price = datos['ClosePrice']
+    rs_gain = datos["RelStrAvgGain"]
+    rs_loss = datos['RelStrAvgLoss']
+    rsi = datos['RSI']
+    limite_inferior = rsi.sort_values()[:1000].mean()
+    limite_superior = rsi.sort_values()[-1000:].mean()
+
+    datos["signal"] = np.where(datos['RSI'] > limite_superior, 'sell', np.where(datos['RSI'] < limite_inferior, 'buy', ''))
 
 
-# Crear una función que me cree un SL y TP para cada señal
+    # print("{}, Precio = {}, NO HAY ENTRADA (RSI signal) ".format(datos.index[-1], datos.close[-1], ))
 
+    return datos
+
+def creacion_de_señales():
+    precio= pd.DataFrame(mt5.copy_rates_from_pos(simbolo, temporalidad, 0, 1000))
+    precio.time= pd.to_datetime(precio.time,unit="s")
+    df_signal= RSI(precio)
+
+    return df_signal
+
+def graficar(datos):
+    nro=100
+    fig=figure()
+    ax1= fig.add_subplot(211, ylabel="{} precios".format(simbolo))
+    datos[0].close[nro:-nro].plot(ax=ax1)
+    ax2= fig.add_subplot(212)
+    datos[0].RSI[nro:-nro].plot(ax=ax2)
+    # #
+
+    ax2.hlines(datos[1], datos[0].index[0], datos[0].index[-1],color="g")
+    ax2.hlines(datos[2], datos[0].index[0], datos[0].index[-1],color="red")
+    show()
 
 def crear_sl_tp(rates_frame, sl, tp):
-    rates_frame['SL'] = np.where(rates_frame['signal'] == 'sell', rates_frame['close'] + sl,
-                                 np.where(rates_frame['signal'] == 'buy', rates_frame['close'] - sl, 0))
+
+    rates_frame['SL'] = np.where(rates_frame['signal'] == 'sell', rates_frame['close'] + sl, np.where(rates_frame['signal'] == 'buy', rates_frame['close'] - sl, 0))
     rates_frame['TP'] = np.where(rates_frame['signal'] == 'sell', rates_frame['close'] - tp,
                                  np.where(rates_frame['signal'] == 'buy', rates_frame['close'] + tp, 0))
 
@@ -54,7 +125,7 @@ def backtesting_shorts(rates_frame, shorts, winner_op, loser_op):
 
         data = rates_frame[rates_frame['time'] > shorts.iloc[i, 0]]
 
-        data_sl_shorts = data[(data['close'] >= shorts.iloc[i, 10]) | (data['high'] >= shorts.iloc[i, 10]) | (
+        data_sl_shorts = data[(data['close'] >= shorts.iloc[i, 8]) | (data['high'] >= shorts.iloc[i, 8]) | (
                     data['low'] >= shorts.iloc[i, 10])]
 
         data_sl_shorts_min = data_sl_shorts[data_sl_shorts['time'] == data_sl_shorts['time'].min()]
@@ -152,12 +223,10 @@ def backtest_results_consolidated(shorts, longs):
 
 
 def handler_backtesting(symbol, sigma, sl, list_tp):
-    '''
-    Listas de los parámetros que queremos optimizar
 
-    '''
+    rates_frame = creacion_de_señales()
 
-    rates_frame = creacion_de_señales(name, serv, key, path, symbol, sigma)
+
 
     profits_list = []
     efec_list = []
@@ -170,8 +239,7 @@ def handler_backtesting(symbol, sigma, sl, list_tp):
         shorts, longs = crear_sl_tp(rates_frame, sl, i)
         shorts = backtesting_shorts(rates_frame, shorts, winner_op, loser_op)
         longs = backtesting_longs(rates_frame, longs, winner_op, loser_op)
-        resultados_backtesting, profit, effectiveness, total_profit, minimun, shorts_effectiveness, longs_effectiveness, q_longs, q_shorts = backtest_results_consolidated(
-            shorts, longs)
+        resultados_backtesting, profit, effectiveness, total_profit, minimun, shorts_effectiveness, longs_effectiveness, q_longs, q_shorts = backtest_results_consolidated(shorts, longs)
 
         profits_list.append(profit)
         efec_list.append(effectiveness)
@@ -187,4 +255,4 @@ def handler_backtesting(symbol, sigma, sl, list_tp):
 
 
 list_tp = [0.004, 0.005, 0.006]
-handler_backtesting('EURUSD', sigma=2, sl=0.008, list_tp=list_tp)
+print(handler_backtesting('EURUSD', sigma=2, sl=0.008, list_tp=list_tp))
