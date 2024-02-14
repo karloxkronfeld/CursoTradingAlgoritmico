@@ -1,7 +1,8 @@
 import MetaTrader5 as mt5
 import pandas as pd
 from pylab import *
-pd.set_option('display.max_rows', None)
+pd.set_option('display.max_rows', None,)
+
 
 mt5.initialize()
 
@@ -12,12 +13,13 @@ def backtest_unSimbol():
     datos.index=pd.to_datetime(datos.index,unit="s")
 
 
-    datos["signal"]=[0,1,0,0,-1,0]*4000
 
+    datos["signal"]=[0,1,0,0,-1,0]*4000
+    print(datos)
     datos["multiplicacion"]=datos.close*datos.signal
     # print(datos)
     retornos_simbol=datos.close.apply(np.log).diff()
-    print(retornos_simbol)
+    # print(retornos_simbol)
     mis_retornos = datos.signal.shift(1)*retornos_simbol
     mis_retornos_Acum=round(mis_retornos.cumsum().apply(np.exp),2)
     mis_retornos_Acum.plot()
