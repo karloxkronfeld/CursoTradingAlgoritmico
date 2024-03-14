@@ -20,8 +20,8 @@ class Robot_minuto_exacto():
                 "type": mt5.ORDER_TYPE_BUY,
                 "volume": 0.01,
                 "price": mt5.symbol_info_tick(symbol).ask,
-                "comment": "robot_minuto",
-                "type_filling": mt5.ORDER_FILLING_FOK
+                "comment": "TRUErobot_minuto_",
+                "type_filling": mt5.ORDER_FILLING_IOC
             }
 
             result = mt5.order_send(request)
@@ -33,7 +33,7 @@ class Robot_minuto_exacto():
     def Cerrar_operaciones(self):
 
         posiciones_abiertas=pd.DataFrame(list(mt5.positions_get()),columns=mt5.positions_get()[0]._asdict().keys()).set_index("symbol",drop=False)
-        para_cerrar=posiciones_abiertas[posiciones_abiertas.comment=="robot_minuto"]
+        para_cerrar=posiciones_abiertas[posiciones_abiertas.comment=="TRUErobot_minuto_"]
 
         for nro_ in range(len(para_cerrar)):
             symbol = para_cerrar.symbol[nro_]
@@ -75,8 +75,8 @@ class Robot_minuto_exacto():
               |    |    |                 
              )_)  )_)  )_)              
             )___))___))___)\            
-           )____)____)_____)\\
-         _____|____|____|____\\\>
+           )____)____)_____)
+         _____|____|____|___\>
   -------\ Faltan {} minutos /-----------------------------------------------------------
   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     
@@ -154,5 +154,5 @@ class Robot_minuto_exacto():
         ventana.protocol("WM_DELETE_WINDOW", _quit)
         ventana.mainloop()
 
-# Robot_minuto_exacto().robot_handler(minuto_entrada=55,minuto_salida=56)
-Robot_minuto_exacto().backtest_consola()
+Robot_minuto_exacto().robot_handler(minuto_entrada=5,minuto_salida=10)
+# Robot_minuto_exacto().backtest_consola()
